@@ -10,7 +10,6 @@ import (
 	"github.com/spider-pigs/spidomtr"
 	"github.com/spider-pigs/spidomtr/pkg/handlers"
 	"github.com/spider-pigs/spidomtr/pkg/testunit"
-	"github.com/stretchr/testify/require"
 )
 
 func TestRunner(t *testing.T) {
@@ -28,11 +27,18 @@ func TestRunner(t *testing.T) {
 		)
 
 		res := runner.Run(context.Background(), test)
-		require.NotNil(t, res)
-		require.Equal(t, 50, res.Stats.Count)
-		require.Equal(t, 50, res.Stats.Passed)
-		require.Equal(t, 0, res.Stats.Skips)
-		require.Equal(t, 0, res.Stats.Errors)
+		if res.Stats.Count != 50 {
+			t.Fatalf("expected Count 50, got %d", res.Stats.Count)
+		}
+		if res.Stats.Passed != 50 {
+			t.Fatalf("expected Passed 50, got %d", res.Stats.Passed)
+		}
+		if res.Stats.Skips != 0 {
+			t.Fatalf("expected Skips 0, got %d", res.Stats.Skips)
+		}
+		if res.Stats.Errors != 0 {
+			t.Fatalf("expected Errors 0, got %d", res.Stats.Errors)
+		}
 	})
 	t.Run("test runner with error tests", func(t *testing.T) {
 		runner := spidomtr.NewRunner(
@@ -48,11 +54,18 @@ func TestRunner(t *testing.T) {
 		)
 
 		res := runner.Run(context.Background(), test)
-		require.NotNil(t, res)
-		require.Equal(t, 50, res.Stats.Count)
-		require.Equal(t, 0, res.Stats.Passed)
-		require.Equal(t, 0, res.Stats.Skips)
-		require.Equal(t, 50, res.Stats.Errors)
+		if res.Stats.Count != 50 {
+			t.Fatalf("expected Count 50, got %d", res.Stats.Count)
+		}
+		if res.Stats.Passed != 0 {
+			t.Fatalf("expected Passed 0, got %d", res.Stats.Passed)
+		}
+		if res.Stats.Skips != 0 {
+			t.Fatalf("expected Skips 0, got %d", res.Stats.Skips)
+		}
+		if res.Stats.Errors != 50 {
+			t.Fatalf("expected Errors 50, got %d", res.Stats.Errors)
+		}
 	})
 	t.Run("test runner with skipped tests", func(t *testing.T) {
 		runner := spidomtr.NewRunner(
@@ -68,11 +81,18 @@ func TestRunner(t *testing.T) {
 		)
 
 		res := runner.Run(context.Background(), test)
-		require.NotNil(t, res)
-		require.Equal(t, 50, res.Stats.Count)
-		require.Equal(t, 0, res.Stats.Passed)
-		require.Equal(t, 50, res.Stats.Skips)
-		require.Equal(t, 0, res.Stats.Errors)
+		if res.Stats.Count != 50 {
+			t.Fatalf("expected Count 50, got %d", res.Stats.Count)
+		}
+		if res.Stats.Passed != 0 {
+			t.Fatalf("expected Passed 0, got %d", res.Stats.Passed)
+		}
+		if res.Stats.Skips != 50 {
+			t.Fatalf("expected Skips 50, got %d", res.Stats.Skips)
+		}
+		if res.Stats.Errors != 0 {
+			t.Fatalf("expected Errors 0, got %d", res.Stats.Errors)
+		}
 	})
 	t.Run("test runner with pass, skip and error", func(t *testing.T) {
 		runner := spidomtr.NewRunner(
@@ -102,11 +122,18 @@ func TestRunner(t *testing.T) {
 		)
 
 		res := runner.Run(context.Background(), test1, test2, test3)
-		require.NotNil(t, res)
-		require.Equal(t, 150, res.Stats.Count)
-		require.Equal(t, 50, res.Stats.Passed)
-		require.Equal(t, 50, res.Stats.Skips)
-		require.Equal(t, 50, res.Stats.Errors)
+		if res.Stats.Count != 150 {
+			t.Fatalf("expected Count 150, got %d", res.Stats.Count)
+		}
+		if res.Stats.Passed != 50 {
+			t.Fatalf("expected Passed 50, got %d", res.Stats.Passed)
+		}
+		if res.Stats.Skips != 50 {
+			t.Fatalf("expected Skips 50, got %d", res.Stats.Skips)
+		}
+		if res.Stats.Errors != 50 {
+			t.Fatalf("expected Errors 50, got %d", res.Stats.Errors)
+		}
 	})
 }
 
@@ -132,12 +159,21 @@ func TestJoinResults(t *testing.T) {
 	res2 := runner2.Run(context.Background(), test)
 
 	res := spidomtr.JoinResults(spidomtr.DefaultHistogramBuckets, spidomtr.DefaultPercentiles, res1, res2)
-	require.NotNil(t, res)
-	require.Equal(t, 100, res.Stats.Count)
-	require.Equal(t, 100, res.Stats.Passed)
-	require.Equal(t, 0, len(res.Stats.Errorm))
-	require.Equal(t, 0, res.Stats.Skips)
-	require.Equal(t, 0, res.Stats.Errors)
+	if res.Stats.Count != 100 {
+		t.Fatalf("expected Count 100, got %d", res.Stats.Count)
+	}
+	if res.Stats.Passed != 100 {
+		t.Fatalf("expected Passed 100, got %d", res.Stats.Passed)
+	}
+	if len(res.Stats.Errorm) != 0 {
+		t.Fatalf("expected 0 error messages, got %d", len(res.Stats.Errorm))
+	}
+	if res.Stats.Skips != 0 {
+		t.Fatalf("expected Skips 0, got %d", res.Stats.Skips)
+	}
+	if res.Stats.Errors != 0 {
+		t.Fatalf("expected Errors 0, got %d", res.Stats.Errors)
+	}
 }
 
 func TestRunnerWithUsers(t *testing.T) {
@@ -178,8 +214,9 @@ func TestRunnerWithUsers(t *testing.T) {
 	)
 
 	res := runner.Run(context.Background(), test1, test2, test3)
-	require.NotNil(t, res)
-	require.Equal(t, 1500, res.Stats.Count)
+	if res.Stats.Count != 1500 {
+		t.Fatalf("expected Count 1500, got %d", res.Stats.Count)
+	}
 }
 
 func TestHandlers(t *testing.T) {
@@ -225,10 +262,15 @@ func TestHandlers(t *testing.T) {
 	)
 
 	res := runner.Run(context.Background(), test1, test2, test3)
-	require.NotNil(t, res)
-	require.Equal(t, 1500, res.Stats.Count)
-	require.Equal(t, 500, res.Stats.Skips)
-	require.Greater(t, res.Stats.Passed, 500)
+	if res.Stats.Count != 1500 {
+		t.Fatalf("expected Count 1500, got %d", res.Stats.Count)
+	}
+	if res.Stats.Skips != 500 {
+		t.Fatalf("expected Skips 500, got %d", res.Stats.Skips)
+	}
+	if res.Stats.Passed <= 500 {
+		t.Fatalf("expected Passed > 500, got %d", res.Stats.Passed)
+	}
 }
 
 func coinflip() string {
