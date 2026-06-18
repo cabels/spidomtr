@@ -11,51 +11,43 @@ spidomtr is a golang lib for benchmarking and load testing.
 /____  >|   __/|__\____ |\____/|__|_|  /__|  |__|
      \/ |__|           \/            \/
 
-[====================================================================] 100%    3s
+[====================================================================] 100%    4s
 
 Summary:
-  Count:     500
-  Total:     3.391898304s
-  Slowest:   104 ms
-  Fastest:   21 ms
-  Average:   61 ms
-  Req/sec:   147.41
+  Count:     1500
+  Total:     4.348195333s
+  Slowest:   49 ms
+  Fastest:   5 ms
+  Average:   22 ms
+  Req/sec:   229.98
 
 Response time histogram:
-    21 ms [1]     |
-    37 ms [94]    |∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎
-    54 ms [120]   |∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎
-    70 ms [95]    |∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎
-    87 ms [104]   |∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎
-   104 ms [86]    |∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎
+     5 ms [1]     |∎
+     6 ms [44]    |∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎
+    13 ms [52]    |∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎
+    18 ms [60]    |∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎
+    30 ms [12]    |∎∎∎∎∎∎∎∎
+    43 ms [24]    |∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎
+    49 ms [10]    |∎∎∎∎∎∎∎
 
 Latency distribution:
-  10% in 30 ms
-  25% in 42 ms
-  50% in 59 ms
-  75% in 81 ms
-  90% in 93 ms
-  95% in 97 ms
-  99% in 101 ms
+  10% in 7 ms
+  25% in 11 ms
+  50% in 17 ms
+  75% in 29 ms
+  90% in 41 ms
+  95% in 45 ms
+  99% in 49 ms
 
 Responses:
-  OK:        500
-  Errored:   0
-  Skipped:   0
+  OK:        949
+  Errored:   51
+  Skipped:   500
 
 Tests:
-  √ awesome_test
-    Count:     500
-    OK:        500
-    Errored:   0
-    Skipped:   0
-    Slowest:   104 ms
-    Fastest:   21 ms
-    Average:   61 ms
-    90%:       93 ms
-    95%:       97 ms
-    99%:       101 ms
-    Req/sec:   147.41
+  ☓ flaky_endpoint
+  - disabled_endpoint
+  √ fast_endpoint
 ```
 
 # Install
@@ -64,11 +56,17 @@ import "github.com/spider-pigs/spidomtr"
 ```
 
 # Usage
+
+See [example/main.go](example/main.go) for a complete runnable example.
+
 ```golang
 package main
 
 import (
 	"context"
+	"errors"
+	"math/rand"
+	"time"
 
 	"github.com/spider-pigs/spidomtr"
 	"github.com/spider-pigs/spidomtr/pkg/handlers"
@@ -76,32 +74,44 @@ import (
 )
 
 func main() {
-	// Create the test runner
-	runner := spidomtr.NewRunner(
-		spidomtr.ID("awesome tests"),
-		spidomtr.Description("just running some awesome tests"),
-		spidomtr.Handlers(
-			handlers.ProgressBar(), // Displays progress bar during test run
-		),
-		spidomtr.Iterations(50), // Run the test 50 times
-		spidomtr.Timeout(time.Second*20), // Set a test timeout
-		spidomtr.Users(10), // Simulate 10 concurrent users
-	)
-
-	// Create a test
-	test := testunit.New(
+	// A simple test that simulates variable latency
+	fast := testunit.New(
+		testunit.ID("fast_endpoint"),
 		testunit.Test(func(ctx context.Context, args []interface{}) ([]interface{}, error) {
-			if err := doSomethingCool(ctx); err != nil {
-				// Test failed
-				return args, err
-			}
-			// Test passed
-			return args, nil
+			time.Sleep(time.Duration(5+rand.Intn(15)) * time.Millisecond)
+			return nil, nil
 		}),
 	)
 
-	// Run the test
-	res := runner.Run(context.Background(), test)
-	...
+	// A test that occasionally fails
+	flaky := testunit.New(
+		testunit.ID("flaky_endpoint"),
+		testunit.Test(func(ctx context.Context, args []interface{}) ([]interface{}, error) {
+			time.Sleep(time.Duration(10+rand.Intn(40)) * time.Millisecond)
+			if rand.Intn(10) == 0 {
+				return nil, errors.New("connection timeout")
+			}
+			return nil, nil
+		}),
+	)
+
+	// A skipped test
+	skipped := testunit.New(
+		testunit.ID("disabled_endpoint"),
+		testunit.Enabled(func() (bool, string) {
+			return false, "endpoint under maintenance"
+		}),
+	)
+
+	runner := spidomtr.NewRunner(
+		spidomtr.ID("example-run"),
+		spidomtr.Description("demonstrate spidomtr features"),
+		spidomtr.Iterations(100),
+		spidomtr.Users(5),
+		spidomtr.Timeout(10*time.Second),
+		spidomtr.Handlers(handlers.ProgressBar(), handlers.Logger()),
+	)
+
+	runner.Run(context.Background(), fast, flaky, skipped)
 }
 ```
