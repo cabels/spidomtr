@@ -2,8 +2,8 @@ package testunit
 
 import (
 	"context"
-
-	"github.com/google/uuid"
+	"crypto/rand"
+	"fmt"
 )
 
 // TestUnit type
@@ -75,7 +75,7 @@ type TestAssembly struct {
 // New constructs a new test
 func New(options ...Option) *TestAssembly {
 	cfg := &Config{
-		ID:      uuid.New().String(),
+		ID:      randomID(),
 		Enabled: func() (bool, string) { return true, "" },
 		Prepare: func(context.Context) ([]interface{}, error) { return nil, nil },
 		Test:    func(context.Context, []interface{}) ([]interface{}, error) { return nil, nil },
@@ -111,4 +111,10 @@ func (test *TestAssembly) Test(ctx context.Context, args []interface{}) ([]inter
 // Cleanup runs after Test(context.Context, []interface{}) error
 func (test *TestAssembly) Cleanup(ctx context.Context, args []interface{}) error {
 	return test.cfg.Cleanup(ctx, args)
+}
+
+func randomID() string {
+	b := make([]byte, 16)
+	rand.Read(b)
+	return fmt.Sprintf("%x-%x-%x-%x-%x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
 }
