@@ -44,7 +44,6 @@ func (logger *TestLogger) RunnerStarted(id, description string, count int) {
 	logger.Buffer = &bytes.Buffer{}
 
 	fmt.Fprintf(logger.Buffer, "Running %s: %s...\n", id, description)
-	logger.Log.Printf("Running %s: %s\n", id, description)
 }
 
 // TestDone is called when a test has been completed.
@@ -52,13 +51,10 @@ func (logger *TestLogger) TestDone(res spidomtr.TestResult) {
 	switch res.Outcome {
 	case testunit.Skip:
 		fmt.Fprintf(logger.Buffer, "%s %s: %s\n", skipMark, res.ID, res.Comment)
-		logger.Log.Printf("%s %s: %s\n", yellow(skipMark), res.ID, res.Comment)
 	case testunit.Fail:
 		fmt.Fprintf(logger.Buffer, "%s %s: %s\n", crossMark, res.ID, res.Error)
-		logger.Log.Printf("%s %s: %s\n", red(crossMark), res.ID, res.Error)
 	case testunit.Pass:
 		fmt.Fprintf(logger.Buffer, "%s %s: %s\n", checkMark, res.ID, res.Duration)
-		logger.Log.Printf("%s %s: %s\n", green(checkMark), res.ID, res.Duration)
 	}
 }
 
@@ -78,5 +74,6 @@ func (logger *TestLogger) RunnerDone(res spidomtr.Result) {
 	divider := strings.Repeat("-", utf8.RuneCountInString(str)+2)
 
 	fmt.Fprintf(logger.Buffer, "%s\n%s %s\n%s\n", divider, mark, str, divider)
+	logger.Log.Print(logger.Buffer.String())
 	logger.Log.Printf("%s\n%s %s\n%s\n", divider, mark, str, divider)
 }

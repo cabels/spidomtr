@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/spider-pigs/spidomtr"
@@ -12,9 +13,11 @@ import (
 const barWidth = 68
 
 type progressBar struct {
-	count   int
-	current int
-	start   time.Time
+	mu       sync.Mutex
+	count    int
+	current  int
+	start    time.Time
+	lastDraw time.Time
 }
 
 // ProgressBar is a runner handler that displays a running progress
@@ -32,7 +35,17 @@ func (b *progressBar) RunnerStarted(id, description string, count int) {
 
 // TestDone is called when a test has been completed.
 func (b *progressBar) TestDone(spidomtr.TestResult) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
 	b.current++
+	if b.current < b.count && time.Since(b.lastDraw) < 200*time.Millisecond {
+		return
+	}
+	b.lastDraw = time.Now()
+	b.draw()
+}
+
+func (b *progressBar) draw() {
 	filled := barWidth * b.current / b.count
 	var bar string
 	if b.current == b.count {
@@ -44,7 +57,7 @@ func (b *progressBar) TestDone(spidomtr.TestResult) {
 	}
 	pct := 100 * b.current / b.count
 	elapsed := time.Since(b.start).Truncate(time.Second)
-	fmt.Fprintf(os.Stderr, "\r[%s] %3d%% %4s", bar, pct, elapsed)
+	fmt.Fprintf(os.Stderr, "\033[2K\r[%s] %3d%% %4s", bar, pct, elapsed)
 }
 
 // RunnerDone is called when the runner has run all tests.
