@@ -1,5 +1,5 @@
 # spidomtr
-[![Build Status](https://travis-ci.org/spider-pigs/spidomtr.svg?branch=master)](https://travis-ci.org/spider-pigs/spidomtr) [![Go Report Card](https://goreportcard.com/badge/github.com/spider-pigs/spidomtr)](https://goreportcard.com/report/github.com/spider-pigs/spidomtr) [![GoDoc](https://godoc.org/github.com/spider-pigs/spidomtr?status.svg)](https://godoc.org/github.com/spider-pigs/spidomtr)
+[![Go Report Card](https://goreportcard.com/badge/github.com/spider-pigs/spidomtr)](https://goreportcard.com/report/github.com/spider-pigs/spidomtr) [![GoDoc](https://godoc.org/github.com/spider-pigs/spidomtr?status.svg)](https://godoc.org/github.com/spider-pigs/spidomtr)
 
 spidomtr is a golang lib for benchmarking and load testing.
 
